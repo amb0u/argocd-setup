@@ -1,38 +1,34 @@
-name: Deploy to Kubernetes
+name: project ci cd
 
 on:
   push:
-    branches: [master]
+    branches: [ main ]
   pull_request:
-    branches: [master]
-
-env:
-  DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
-  DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+    branches: [ main ]
 
 jobs:
-  deploy:
+  build:
+
     runs-on: ubuntu-latest
 
     steps:
-      # Checkout the code from GitHub repository
-      - name: Checkout code
-        uses: actions/checkout@v2
-        
-      - name: Login to Docker Hub
-        uses: docker/login-action@v1
+      - uses: actions/checkout@v2
+      - name: Set up JDK 1.8
+        uses: actions/setup-java@v1
         with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}  
+          java-version: '1.8'
+          distribution: 'adopt'
+          cache: maven
 
-      # Build Docker image and push it to Docker Hub
-      - name: Build and push Docker image
-        run: |
-          docker build -t ${DOCKER_USERNAME}/my-app:latest -f argocd-cicd-setup/Dockerfile .
-          docker push ${DOCKER_USERNAME}/my-app:latest
-      - name: Login to GitHub Packages
-        uses: actions/checkout@v3
+      - name: Build with Maven
+        run: mvn clean install
+
+      - name: Build & push Docker image
+        uses: mr-smithers-excellent/docker-build-push@v6
         with:
-          repository: ravindrasinghh/argocd-setup
-          ref: 'master'
-          token: ${{ secrets.G_TOKEN }}
+          image: amb0u/atlas-api
+          tags: latest
+          registry: docker.io
+          dockerfile: Dockerfile
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
