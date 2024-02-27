@@ -8,7 +8,7 @@ metadata:
   finalizers:
     - resources-finalizer.argocd.argoproj.io
 spec:
-  project: my-app-project
+  project: atlas-cmms
   source:
     repoURL: https://github.com/amb0u/argocd-setup.git
     targetRevision: HEAD
